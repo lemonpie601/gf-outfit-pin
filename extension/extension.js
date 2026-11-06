@@ -1,6 +1,7 @@
-/* Gacha Forge · 의상 캐릭터 고정 v1.0.0 — 개인 확장 (Gacha Forge 1.8.13 / Marinara Engine 2.5.1).
- * 게임 설정 왼쪽 목록에 [의상 캐릭터]를 더하고, 지금 열려 있는 월드에서 상점 의상을 받을 캐릭터를 고릅니다.
- * 고른 캐릭터들 안에서만 의상이 생성됩니다. 아무도 고르지 않으면 게임 기본(보유 캐릭터 전체)입니다.
+/* Gacha Forge · 의상 캐릭터 고정 v1.1.0 — 개인 확장 (Gacha Forge 1.27 / Marinara Engine 2.5.2).
+ * 게임 설정 왼쪽 목록에 [의상 캐릭터]를 더하고, 지금 열려 있는 월드에서 상점 의상에 꼭 넣을 캐릭터를 고릅니다.
+ * 로테이션당 의상 수는 게임 설정 그대로이고, 고른 캐릭터가 먼저 들어간 뒤 남은 자리는 나머지 보유 캐릭터 중 무작위입니다.
+ * 아무도 고르지 않으면 게임 기본(보유 캐릭터 전체, 덜 받은 캐릭터부터)입니다.
  * 서버 쪽 훅(gf-outfit-pin-runtime.cjs)이 먼저 설치되어 있어야 합니다. */
 (() => {
   "use strict";
@@ -90,22 +91,22 @@
     const search = h("input", { class: "gop-search", type: "search", placeholder: "이름 검색", "aria-label": "캐릭터 이름 검색" });
     const countEl = h("span", { class: "gop-count" });
     const clear = h("button", { class: "st-compress -ghost", type: "button", text: "모두 해제" });
-    const grid = h("div", { class: "gop-grid", role: "group", "aria-label": "의상을 받을 캐릭터" });
+    const grid = h("div", { class: "gop-grid", role: "group", "aria-label": "의상에 고정할 캐릭터" });
     const status = h("div", { class: "gop-status", role: "status" });
     const revert = h("button", { class: "st-compress -ghost", type: "button", text: "되돌리기" });
     const save = h("button", { class: "st-compress -go", type: "button", text: "이 월드에 적용" });
     root.append(
       h("div", { class: "st-plate" },
-        h("div", { class: "hd" }, h("h3", { text: "의상 받을 캐릭터" }), world),
+        h("div", { class: "hd" }, h("h3", { text: "의상 고정 캐릭터" }), world),
         h("div", { class: "gop-tools" }, search, countEl, clear),
         grid,
-        h("div", { class: "gop-note", text: "고른 캐릭터들 안에서만 상점 의상이 생성됩니다 (이전에 덜 받은 캐릭터부터). 아무도 고르지 않으면 게임 기본처럼 보유 캐릭터 전체에서 고릅니다. 이미 다 채워진 이번 로테이션은 그대로이고, 다음 로테이션부터 반영됩니다." })),
+        h("div", { class: "gop-note", text: "로테이션당 의상 수는 게임 설정(이미지 → 로테이션당 의상 수) 그대로입니다. 고른 캐릭터가 먼저 들어가고, 남은 자리는 나머지 보유 캐릭터 중에서 무작위로 채웁니다. 고른 인원이 의상 수보다 많으면 고른 캐릭터 중 이전에 덜 받은 캐릭터부터 들어갑니다. 아무도 고르지 않으면 게임 기본입니다. 이미 다 채워진 이번 로테이션은 그대로이고, 다음 로테이션부터 반영됩니다." })),
       h("div", { class: "gop-foot" }, status, revert, save),
     );
     let server = null, loadedFor = "", busy = false, list = [], picked = new Set(), perRotation = 0;
     function refresh() {
       const n = picked.size;
-      countEl.textContent = !server ? "" : n ? n + "명 선택 · 로테이션당 " + Math.min(perRotation || n, n) + "벌" : "선택 없음 · 게임 기본";
+      countEl.textContent = !server ? "" : !n ? "선택 없음 · 게임 기본" : !perRotation ? n + "명 고정" : n >= perRotation ? n + "명 고정 · 로테이션당 " + perRotation + "벌 모두 고정 캐릭터" : n + "명 고정 + " + (perRotation - n) + "명 무작위 · 로테이션당 " + perRotation + "벌";
       for (const input of grid.querySelectorAll("input")) input.disabled = busy;
       search.disabled = clear.disabled = !server || busy;
       clear.disabled = clear.disabled || !n;
@@ -158,7 +159,7 @@
       try {
         const d = await callApi(API + "/set", { runId: loadedFor, pinned: [...picked] });
         fill(d);
-        setStatus(status, picked.size ? "저장했습니다. 다음 의상 로테이션부터 고른 캐릭터만 나옵니다." : "저장했습니다. 게임 기본으로 돌아갔습니다.", "ok");
+        setStatus(status, picked.size ? "저장했습니다. 다음 의상 로테이션부터 고른 캐릭터가 먼저 들어가고 남은 자리는 무작위입니다." : "저장했습니다. 게임 기본으로 돌아갔습니다.", "ok");
       } catch (e) { setStatus(status, "저장하지 못했습니다. " + e.message, "error"); }
       finally { busy = false; refresh(); }
     };

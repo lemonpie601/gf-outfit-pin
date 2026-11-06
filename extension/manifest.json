@@ -3,8 +3,8 @@
   "version": 1,
   "config": {
     "name": "Gacha Forge · 의상 캐릭터 고정",
-    "version": "1.0.0",
-    "description": "가챠 포지 설정에 [의상 캐릭터]를 더해, 월드마다 상점 의상을 받을 캐릭터를 고릅니다. 고른 캐릭터들 안에서만 의상이 생성됩니다. 서버 훅(gf-outfit-pin-runtime.cjs)이 필요합니다.",
+    "version": "1.1.0",
+    "description": "가챠 포지 설정에 [의상 캐릭터]를 더해, 월드마다 상점 의상에 꼭 넣을 캐릭터를 고릅니다. 로테이션당 의상 수는 게임 설정 그대로, 고른 캐릭터가 먼저 들어가고 남은 자리는 무작위입니다. 서버 훅(gf-outfit-pin-runtime.cjs)이 필요합니다.",
     "runtime": "client",
     "enabled": false,
     "capabilities": [
